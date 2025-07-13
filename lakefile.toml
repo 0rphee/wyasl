@@ -1,0 +1,17 @@
+name = "wyasl"
+version = "0.1.0"
+defaultTargets = ["wyasl"]
+license = "MIT"
+
+[[require]]
+name = "Parser"
+version = "git#main"
+scope = "fgdorais"
+
+[[lean_lib]]
+name = "Wyasl"
+
+[[lean_exe]]
+name = "wyasl"
+root = "Main"
+needs = ["Wyasl"]
