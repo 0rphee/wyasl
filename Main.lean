@@ -1,5 +1,9 @@
 import Wyasl
+import Wyasl.Parser
 
-def main : IO Unit := do
-  IO.println s!"Hello, World!"
-  IO.println s!"Wyasl: {repr Wyasl.Parser.commentStart}"
+open Wyasl.Parser
+
+unsafe def main : IO Unit := do
+  IO.println "main"
+  
+  IO.println s!"{<- WParser.showRes "#t"}"
