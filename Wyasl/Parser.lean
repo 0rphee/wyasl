@@ -34,7 +34,7 @@ def identLetter :=
 def WParser.simpleSpace : WParser Unit := Parser.Char.Unicode.whitespace *> pure ()
 def WParser.oneLineComment := do
   let _ <- Parser.withBacktracking <| Parser.Char.string commentLine
-  WParser.skipMany (Parser.Char.char '\n')
+  WParser.skipMany (Parser.tokenFilter (. != '\n'))
 
 mutual
 partial def WParser.inCommentMulti : WParser Unit :=
