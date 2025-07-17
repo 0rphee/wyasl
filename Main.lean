@@ -1,9 +1,4 @@
-import Wyasl
-import Wyasl.Parser
+import Wyasl.Cli
 
-open Wyasl.Parser
-
-unsafe def main : IO Unit := do
-  IO.println "main"
-  
-  IO.println s!"{<- WParser.showRes "#t"}"
+unsafe def main (args : List String): IO UInt32 := do
+  Wyasl.Cli.cli.validate args

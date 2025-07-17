@@ -48,7 +48,7 @@ partial def WParser.multiLineComment := do
 end
 
 def WParser.whiteSpace : WParser Unit := do
-  IO.println "whiteSpace"
+  -- IO.println "whiteSpace"
   WParser.skipMany (WParser.simpleSpace <|> oneLineComment <|> multiLineComment)
 
 def WParser.lexeme (p : WParser out) : WParser out :=
@@ -178,10 +178,10 @@ def WParser.nil : WParser Unit :=
   Parser.withBacktracking (Parser.Char.char '\'' *> Parser.Char.string "()") *> pure ()
 
 unsafe def WParser.hashVal : WParser LispVal := do
-  println! "hashVal"
+  -- println! "hashVal"
   let a <- lexeme do
     let _ <- Parser.Char.char '#'
-    println! "after #"
+    -- println! "after #"
     (   (Parser.Char.char 't' *> pure (LispVal.bool true))
     <|> (Parser.Char.char 'f' *> pure (LispVal.bool false))
     <|> (Parser.Char.char 'b' *> (fromNat <$> Parser.Char.ASCII.parseNat.binNum))
@@ -192,7 +192,7 @@ unsafe def WParser.hashVal : WParser LispVal := do
     <|> (Parser.Char.char '(' *> Parser.throwUnexpectedWithMessage (msg := "Unsupported: vector"))
     <|> (Parser.Char.char '\\' *> Parser.throwUnexpectedWithMessage (msg := "Unsupported: char"))
     )
-  println! "after hashVal {a}"
+  -- println! "after hashVal {a}"
   pure a
   where
     fromNat := LispVal.number ∘ Nat.toInt64
@@ -205,7 +205,7 @@ unsafe def WParser.manyLispVal : WParser (List LispVal) :=
   Array.toList <$> Parser.sepBy whiteSpace lispVal
 
 unsafe def WParser.lispVal : WParser LispVal := do
-  println! "before lispVal"
+  -- println! "before lispVal"
   let r <- (hashVal
     <|> (nil *> pure .nil)
     <|> (.number <$> (Parser.withBacktracking decimal))
@@ -214,15 +214,15 @@ unsafe def WParser.lispVal : WParser LispVal := do
     <|> (quote <$> quoted lispVal)
     <|> (.list <$> parens manyLispVal)
     )
-  println! "after lispVal"
+  -- println! "after lispVal"
   pure r
 end
 
 def WParser.contents [ToString a] (p : WParser a) : WParser a := do
-  println! "start contents"
+  -- println! "start contents"
   whiteSpace
   let r <- lexeme p
-  println! "after lexeme p: {r}"
+  -- println! "after lexeme p: {r}"
   Parser.endOfInput
   pure r
 

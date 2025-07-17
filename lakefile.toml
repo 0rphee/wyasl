@@ -3,11 +3,6 @@ version = "0.1.0"
 defaultTargets = ["wyasl"]
 license = "MIT"
 
-[[require]]
-name = "Parser"
-version = "git#main"
-scope = "fgdorais"
-
 [[lean_lib]]
 name = "Wyasl"
 
@@ -15,3 +10,13 @@ name = "Wyasl"
 name = "wyasl"
 root = "Main"
 needs = ["Wyasl"]
+
+[[require]]
+name = "Parser"
+version = "git#main"
+scope = "fgdorais"
+
+[[require]]
+name = "Cli"
+version = "git#main"
+scope = "leanprover"

@@ -6,7 +6,6 @@ namespace Wyasl.LispVal
 
 abbrev EnvCtx a := Std.TreeMap String a
 
-
 def EvalT c e m a := ReaderT (EnvCtx c) (ExceptT e m) a
 abbrev Ev env err a := EvalT env err IO a
 
@@ -82,17 +81,28 @@ unsafe inductive LispVal where
   | bool   : Bool -> LispVal
 end
 
+unsafe def unwords (formatter : LispVal -> Std.Format) (l : List LispVal) :  Std.Format := ((l.map formatter).intersperse (.text " ")).foldl (. ++ .) ""
+
 unsafe def showVal : LispVal -> Std.Format
   | .atom a => .text a
-  -- TODO: intersperse .list
-  | .list a => "(" ++ List.foldl (fun x y => x ++ " "++  showVal y) "" a ++ ")"
+  | .list a => "(" ++ unwords showVal a ++ ")"
   | .number a => repr a
   | .string a => repr a
   | .fn _ => "(internal function)"
   | .lambda _ _ => "(lambda function)"
   | .nil => "Nil"
-  | .bool false => "#t"
-  | .bool true => "#f"
+  | .bool false => "#f"
+  | .bool true => "#t"
+
+unsafe def LispVal.ty : LispVal -> String
+  | .atom _ => "atom"
+  | .list _ => "list"
+  | .number _ => "number "
+  | .string _ => "string "
+  | .fn _ => "function"
+  | .lambda _ _ => "lambda"
+  | .nil => "nil"
+  | .bool _ => "bool"
 
 unsafe instance : Repr LispVal where
   reprPrec v _ := showVal v
@@ -102,6 +112,22 @@ unsafe instance : ToString LispVal where
 
 unsafe def LispVal.toString (v : LispVal) : String
   := ToString.toString v
+
+unsafe def LispException.fmt : LispException -> Std.Format
+  | .numArgs n args       =>  s!"Error Number Arguments, expected {toString n} received args: {unwords showVal args}"
+  | .lengthOfList msg n   => s!"Error Length of List in {msg} length: {toString n}"
+  | .expectedList msg     => s!"Error Expected List in function {msg}"
+  | .typeMismatch msg val => s!"Error Type Mismatch: {msg} {showVal val}"
+  | .badSpecialForm msg   => s!"Error Bad Special Form: {msg}"
+  | .notFunction val      => s!"Error Not a Function: {showVal val}"
+  | .unboundVar name      => s!"Error Unbound Variable: {name}"
+  | .default val          => s!"Error, Danger Will Robinson! Evaluation could not proceed! {showVal val} "
+  | .pError parserError   => s!"Parser Error, expression cannot evaluate: {parserError}"
+  | .ioError msg          => s!"Error reading file: {msg}"
+
+
+unsafe instance : ToString LispException where
+  toString v := Std.Format.pretty $ v.fmt
 
 unsafe abbrev Eval := Ev LispVal LispException
 unsafe abbrev Func := FuncT LispVal LispException
