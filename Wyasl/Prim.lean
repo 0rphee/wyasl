@@ -22,7 +22,7 @@ unsafe def OpArgs.toInt64 : OpArgs -> Int64
   | .unary => 1
   | .binary => 2
 
-unsafe def opMk (n : OpArgs) (op : n.toFunType) (args : List LispVal) : Eval LispVal :=
+unsafe def OpArgs.opMk (n : OpArgs) (op : n.toFunType) (args : List LispVal) : Eval LispVal :=
   match n, args with
   | .binary, [a, b] => op a b
   | .unary, [x] => op x
@@ -53,8 +53,8 @@ unsafe def putTextFile (filename : String) (msg : String) : Eval LispVal := do
 unsafe def put (file : LispVal) (msg : LispVal) : Eval LispVal :=
   match file, msg with
   | .string fileS, .string msgS => putTextFile fileS msgS
-  | .string _, _ => throw <| .typeMismatch "put expects string in the second argument (try using show), instead got: " msg
-  | _,  _ => throw <| .typeMismatch "put expects string, instead got: " file
+  | .string _, _ => throw <| .typeMismatch "put expects string in the second argument (try using show), instead got:" msg
+  | _,  _ => throw <| .typeMismatch "put expects string, instead got:" file
 
 unsafe def binopFold (binop : Binary) (farg : LispVal) (args : List LispVal) : Eval LispVal :=
   match args with
@@ -65,15 +65,15 @@ unsafe def binopFold (binop : Binary) (farg : LispVal) (args : List LispVal) : E
 unsafe def numBool (op : Int64 -> Bool) (val : LispVal) : Eval LispVal :=
   match val with
   | .number x => pure <| .bool (op x)
-  | _ => throw <| .typeMismatch "numeric op " val
+  | _ => throw <| .typeMismatch "numeric op" val
 
 unsafe def numOp (op : Int64 -> Int64 -> Int64) (x : LispVal) (y : LispVal) : Eval LispVal :=
   match x, y with
   | .number vx, .number vy => pure <| .number (op vx vy)
   | .nil, .number _ => pure y
   | .number _, .nil => pure x
-  | .number _, _ => throw $ .typeMismatch "numeric op " y
-  | _, _ => throw $ .typeMismatch "numeric op " x
+  | .number _, _ => throw $ .typeMismatch "numeric op" y
+  | _, _ => throw $ .typeMismatch "numeric op" x
 
 unsafe def strOp (op : String -> String -> String) (x : LispVal) (y : LispVal) : Eval LispVal :=
   match x, y with
@@ -81,7 +81,7 @@ unsafe def strOp (op : String -> String -> String) (x : LispVal) (y : LispVal) :
   | .nil, .string _ => pure y
   | .string _, .nil => pure x
   | .string _, _ => throw $ .typeMismatch "string op " y
-  | _, _ => throw $ .typeMismatch "string op " x
+  | _, _ => throw $ .typeMismatch "string op" x
 
 unsafe def eqOp (op : Bool -> Bool -> Bool) (x : LispVal) (y : LispVal) : Eval LispVal :=
   match x, y with
@@ -89,7 +89,7 @@ unsafe def eqOp (op : Bool -> Bool -> Bool) (x : LispVal) (y : LispVal) : Eval L
   | .nil, .bool _ => pure y
   | .bool _, .nil => pure x
   | .bool _, _ => throw $ .typeMismatch "bool op " y
-  | _, _ => throw $ .typeMismatch "bool op " x
+  | _, _ => throw $ .typeMismatch "bool op" x
 
 unsafe def numCmp (op : Int64 -> Int64 -> Bool) (x : LispVal) (y : LispVal) : Eval LispVal :=
   match x, y with
@@ -102,7 +102,7 @@ unsafe def numCmp (op : Int64 -> Int64 -> Bool) (x : LispVal) (y : LispVal) : Ev
 unsafe def notOp (x : LispVal) : Eval LispVal :=
   match x with
   | .bool v => .pure <| .bool (not v)
-  | _ => throw $ .typeMismatch " not expects Bool" x
+  | _ => throw $ .typeMismatch "not expects Bool" x
 
 unsafe def eqCmd (x : LispVal) (y : LispVal) : Eval LispVal :=
   match x, y with
@@ -138,11 +138,15 @@ unsafe def quote (l : List LispVal) : Eval LispVal :=
   | [_] => pure <| .list (.atom "quote" :: l)
   | _ => throw $ .numArgs 1 l
 
-unsafe def binop := opMk .binary
-unsafe def unop := opMk .unary
+unsafe def binop := OpArgs.binary.opMk 
+unsafe def unop :=  OpArgs.unary.opMk
 
 def even (x : Int64) : Bool := (Int64.mod x 2) == 0
 def odd (x : Int64) : Bool := not <| even x
+
+unsafe def display : LispVal -> Eval LispVal
+  | .string s => IO.println s *> pure .nil
+  | v => throw $ .typeMismatch "display expects string, instead it got:"  v
 
 unsafe def primEnv : EnvCtx LispVal :=
   Std.TreeMap.ofArray
@@ -174,4 +178,9 @@ unsafe def primEnv : EnvCtx LispVal :=
     , ("slurp", mkF $ unop slurp)
     -- , ("wslurp", mkF $ unop wSlurp)
     , ("put", mkF $ binop put)
+    -- , ("read" ,mkF $ unop readFn)
+    -- , ("parse", mkF $ unop parseFn)
+    -- , ("eval", mkF $ unop eval)
+    , ("show", mkF $ unop (pure ∘ .string ∘ Std.Format.pretty ∘ LispVal.showVal))
+    , ("display", mkF $ unop display)
     ]
