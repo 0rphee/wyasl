@@ -62,6 +62,8 @@ unsafe def eval (lispVal : LispVal ) : Eval LispVal :=
     | .bool true => eval texpr
     | .bool false => eval fexpr
     | _ => throw <| .badSpecialForm "if"
+  | (.list [.atom "begin", rest]) => evalBody rest
+  | (.list (.atom "begin" :: rest )) => evalBody $ .list rest
   | .list [.atom "let", .list pairs, expr] => do
     let atoms <- (getEven pairs).mapA ensureAtom
     let vals <- (getOdd pairs).mapA eval
@@ -111,7 +113,7 @@ unsafe def basicEnv : EnvCtx LispVal :=
 
 unsafe def evalExpr (file? : Bool) (stringInput : String) : IO Unit := do
     runASTinEnv basicEnv ((parseWithoutLib stringInput)
-    >>= (fun val => IO.println s!"Parse res (type: {val.ty}): {val}" *> (if file? then evalBody else eval) val))
+    >>= (fun val => /-IO.println s!"Parse res (type: {val.ty}): {val}" *> -/(if file? then evalBody else eval) val))
     >>= (fun evaled => do
         IO.println $ match evaled with
           | .ok r =>  s!"After eval (type: {r.ty}): {r}"

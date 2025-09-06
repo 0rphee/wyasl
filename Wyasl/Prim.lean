@@ -146,7 +146,7 @@ def odd (x : Int64) : Bool := not <| even x
 
 unsafe def display : LispVal -> Eval LispVal
   | .string s => IO.println s *> pure .nil
-  | v => throw $ .typeMismatch "display expects string, instead it got:"  v
+  | v => throw $ .typeMismatch "display expects string, instead it got:" v
 
 unsafe def primEnv : EnvCtx LispVal :=
   Std.TreeMap.ofArray
